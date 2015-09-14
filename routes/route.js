@@ -3,7 +3,7 @@ var express = require('express');
 var router = express.Router();
 
 var mongoose   = require('mongoose');
-mongoose.connect('mongodb://lasa:inventor@ds049997.mongolab.com:49997/inventor'); // connect to our database
+mongoose.connect('mongodb://lasarobotics:ftcrocks@ds049997.mongolab.com:49997/inventor'); // connect to our database
 var Item     = require('../app/models/item');
 // middleware to use for all requests
 router.use(function(req, res, next) {
