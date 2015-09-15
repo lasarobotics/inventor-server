@@ -75,8 +75,10 @@ router.route('/items/:item_id')
 
 			if (err)
 				res.send(err);
-
-			item.name = req.body.name;
+			if(req.body.name)
+				item.name = req.body.name;
+			if(req.body.quantity)
+				item.quantity = req.body.quantity;
 			item.save(function(err) {
 				if (err)
 					res.send(err);
@@ -106,7 +108,7 @@ router.route('/items/:item_id/checkout').post(function(req, res) {
 				if (req.body.team && req.body.quantity && !isNaN(parseInt(req.body.quantity))){
 					var quantity = parseInt(req.body.quantity);
 					if (quantity < item.quantity && quantity > 0){
-						item.quantity = item.quantity - quantity;
+						item.quantity = parseInt(item.quantity) - quantity;
 						if (item.checkout){
 							var teamexists = false;
 							for (var i = 0; i < item.checkout.length;i++){
@@ -140,21 +142,45 @@ router.route('/items/:item_id/checkout').post(function(req, res) {
 				}
     });
   });
-router.route('/items/:item_id/checkin').get(function(req, res) {
+router.route('/items/:item_id/checkin').post(function(req, res) {
    Item.findById(req.params.item_id, function(err, item) {
-      if( item.team ){
-        delete item.team;
-				console.log(item);
-        item.save(function(err) {
-          if (err)
-            res.send(err);
-
-          res.json({ error: '0',message:"Item checked in!" });
-        });
-      }
-      else{
-        res.json({ error:'2', message: 'Item is not checked out!' });
-      }
+		 //Verify Arguments
+		 if (req.body.team && req.body.quantity && !isNaN(parseInt(req.body.quantity))){
+			 var quantity = parseInt(req.body.quantity);
+			 var teamexists = false;
+			 for (var i = 0; i < item.checkout.length;i++){
+				 	//Find team entry
+					if (item.checkout[i].team === req.body.team){
+						 teamexists = true;
+						 //Check proper amount
+						 if (req.body.quantity <= item.checkout[i].quantity){
+							 //Do transaction
+							 item.checkout[i].quantity = item.checkout[i].quantity - req.body.quantity;
+							 item.quantity = parseInt(item.quantity) + quantity;
+							 console.log(item.checkout);
+							 if (item.checkout[i].quantity == 0){
+								 item.checkout = _.without(item.checkout,item.checkout[i]);
+							 }
+							 console.log(item.checkout);
+							 item.markModified('checkout');
+	 						 item.save(function(err) {
+	 								if (err)
+	 								 res.send(err);
+	 						 	 res.json({ error: '0',message:"Item checked in!" });
+	 						 });
+						 }
+						 else{
+	 						res.json({ error:'100', message: 'Invalid quantity requested!' });
+	 					}
+					}
+				}
+				if (!teamexists){
+					res.json({ error:'200', message: 'Invalid team number!' });
+				}
+		 }
+		 else{
+			 res.json({ error:'1', message: 'Incorrect parameters' });
+		 }
 
     });
   });
