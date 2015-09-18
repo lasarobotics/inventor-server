@@ -24,10 +24,11 @@ router.route('/items')
 
 	// create a item (accessed at POST http://localhost:8080/items)
 	.post(function(req, res) {
-		if(req.body.name){
+		if(req.body.name && req.body.price){
 			var item = new Item();		// create a new instance of the Item model
 			item.name = req.body.name;  // set the item name (comes from the request)
 			item.quantity = 1;
+			item.price = req.body.price;
 			if(req.body.quantity){
 				item.quantity = req.body.quantity;
 			}
